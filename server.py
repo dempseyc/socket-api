@@ -6,27 +6,30 @@ import random
 
 clients = {}
 
-chars = string.ascii_letters
-length = 4
-
 def createID(n):
+    chars = string.ascii_letters
     new_id = ""
     for i in range(n):
         new_id += random.choice(chars)
     return new_id;
 
 async def handleClient(websocket, path):
-    cid = createID(length)
+    cid = createID(4)
     clients[cid] = websocket
     try:
         await asyncio.wait( [ws.send(f"{key} connected") for key,ws in clients.items()] )
         [ print(f"{key} connected") for key,ws in clients.items() ]
         await asyncio.sleep(10)
 
-        message = await websocket.recv()
+        messages = []
+        # if (websocket):
+        for key,ws in clients.items():
+            message = await ws.recv()
+            messages.append(message)
+        
         # mss['type'] and mss['text']
-        mss = json.loads(message)
-        await asyncio.wait( [ ws.send(json.dumps(mss)) for key,ws in clients.items() ] )
+        mses = [ json.loads(ms) for ms in messages ]
+        await asyncio.wait( [ ws.send(json.dumps(ms)) for ms in mses for key,ws in clients.items() ] )
         await asyncio.sleep(10)
     finally:
         # Unregister.

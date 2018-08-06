@@ -8,7 +8,7 @@ function connect () {
 }
 connect().then((socket)=>{
     socket.onmessage = (event) => {
-        handleMessage(event)
+        handleMessages(event)
     }
     connection = socket;
 });
@@ -21,7 +21,7 @@ chat_form.addEventListener('submit', sendMessage);
 
 // handle ws events
 
-function handleMessage (event) {
+function handleMessages (event) {
     console.log(event.data);
     // let new_message = document.createElement('li');
     // let content = document.createTextNode(event.data);
@@ -32,8 +32,10 @@ function handleMessage (event) {
 function sendMessage (event) {
     event.preventDefault();
     let txt = event.target.elements[0].value;
-    let type = 'publish';
-    let message = `{"type":"${type}","text":"${txt}"}`;
-    connection.send(message);
+    let tag = 'public';
+    let message = `{"tag":"${tag}","text":"${txt}"}`; 
+    if (connection.readyState == 1) {
+        connection.send(message);
+    }
     // console.log(event.target.elements[0].value);
 }
