@@ -19,22 +19,20 @@ def createID(n):
     return new_id;
 
 def clients_event():
-    return json.dumps({'tag': 'clients', 'count': len(clients)})
+    c_list = list(clients)
+    return json.dumps({'tag': 'clients', 'count': len(clients), 'list': c_list })
 
-def room_event(tag='public',message=''):
-    return json.dumps({'tag': f'{tag}', 'text':f'{message}'})
-
-def private_event(data):
+def message_event(data = {'tag': 'hello', 'sender': 'server', 'text': 'hello!'}):
     return json.dumps(data)
 
-async def notify_public_message(message):
+async def notify_public_message(data):
     if clients:
-        ms = room_event('public', message)
+        ms = message_event(data)
         await asyncio.wait([client.send(ms) for key,client in clients.items()])
 
 async def notify_client(data):
     if clients:
-        ms = private_event(data)
+        ms = message_event(data)
         client = ms['to']
     await clients[client].send()
 
@@ -45,9 +43,10 @@ async def notify_clients():
 
 async def register(websocket, cid):
     clients[cid] = websocket
-    print(clients)
     await notify_clients()
 
+async def sendCID(cid):
+    await clients[cid].send(message_event({'tag':'register','sender':'server','to':cid,'text':cid}))
 
 async def unregister(cid):
     clients.pop(cid, None)
@@ -56,13 +55,13 @@ async def unregister(cid):
 async def room(websocket, path):
     cid = createID(4)
     await register(websocket, cid)
+    await sendCID(cid)
     try:
-        await websocket.send(room_event())
+        await websocket.send(message_event())
         async for message in websocket:
             data = json.loads(message)
             if data['tag'] == 'public':
-                message = data['text']
-                await notify_public_message(message)
+                await notify_public_message(data)
             if data['tag'] == 'direct':
                 await notify_client(data)
             else:
