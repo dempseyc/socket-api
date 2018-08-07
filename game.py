@@ -22,7 +22,7 @@ class Game(object):
                 self.start_game()
             return len(self.players)
         else:
-            self.reply_to_bad_joiner(player)
+            return self.reply_to_bad_joiner(player)
 
     def process_message(self,data):
         if (data.sender == self.whos_turn):
@@ -41,11 +41,9 @@ class Game(object):
         print(text)
 
     def reply_to_bad_joiner(self, player):
-        message = self.create_message('game', 'game', player, 'try later.', self.board)
-        self.send_message(message)
+        message = self.create_message('direct', 'game', player, 'try later.', self.board)
+        return message;
 
-    def send_message(self, message):
-        print(message)
 
 
         

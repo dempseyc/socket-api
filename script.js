@@ -35,8 +35,13 @@ function handleMessages (e) {
         case 'public':
             updateMessagesList(data);
             break;
+        case 'direct':
+            updateMessagesList(data);
+            if (data.sender === 'game') { handleGameMessages(data); }
+            break;
         case 'game':
             handleGameMessages(data);
+            break;
         default:
             break
     }
@@ -67,6 +72,7 @@ function pubMessage (event) {
 let oppData = document.getElementById('opponent');
 let avtData = document.getElementById('avatar');
 let board = document.getElementById('board');
+let playerList = [];
 
 avtData.addEventListener('click', () => {
     registerPlayer();
@@ -81,18 +87,24 @@ function registerPlayer() {
 function handleGameMessages(data) {
     switch (data.text) {
         case 'join1':
+            playerList.push(data.sender);
             if (data.sender == clientId) {
-                updateAvtData(1);
+                updateAvtData('join',data.sender,1);
             } else {
-                updateOppData(data.sender,1);
+                updateOppData('join',data.sender,1);
             }
             break;
         case 'join2':
+            playerList.push(data.sender);
             if (data.sender == clientId) {
-                updateAvtData(2);
+                updateAvtData('join',data.sender,2);
             } else {
-                updateOppData(data.sender,2);
+                updateOppData('join',data.sender,2);
             }
+            break;
+        case 'try later.':
+            updateAvtData('reject',playerList[0],1);
+            updateOppData('reject',playerList[1],2);
             break;
         case 'move':
             console.log('move made');
@@ -105,10 +117,30 @@ function handleGameMessages(data) {
     }
 }
 
-function updateAvtData(playerNum) {
-    avtData.innerHTML = `<span>${clientId} as Player${playerNum}</span>`;
+function updateAvtData(uType,player,playerNum) {
+    switch (uType) {
+        case 'join':
+            avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            break;
+        case 'reject':
+            avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            break;
+        default:
+            console.log('unknown');
+            break;
+    }
 }
 
-function updateOppData(oppId,playerNum) {
-    oppData.innerHTML = `<span>${oppId} as Player${playerNum}</span>`;
+function updateOppData(uType,player,playerNum) {
+    switch (uType) {
+        case 'join':
+            oppData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            break;
+        case 'reject':
+            oppData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            break;
+        default:
+            console.log('unknown');
+            break;
+    }
 }

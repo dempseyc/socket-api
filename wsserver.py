@@ -35,9 +35,9 @@ async def notify_public_message(data):
 
 async def notify_client(data):
     if clients:
+        client = data['receiver']
         ms = message_event(data)
-        client = ms['to']
-    await clients[client].send()
+    await clients[client].send(ms)
 
 async def notify_clients():
     if clients:
@@ -56,12 +56,14 @@ async def unregister(cid):
     await notify_clients()
 
 async def handleGame(data):
-    if (data['text'] == 'join'):
+    if (data['text'] == 'join' and game.game_on == False):
         playerNum = game.add_player(data['sender'])
         data['text'] = f'join{str(playerNum)}'
         await notify_public_message(data)
     else:
-        game.handle_message(data)
+        data = game.add_player(data['sender'])
+        await notify_client(data)
+
 
 async def room(websocket, path):
     cid = createID(4)
