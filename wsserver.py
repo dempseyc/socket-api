@@ -60,10 +60,13 @@ async def handleGame(data):
         playerNum = game.add_player(data['sender'])
         data['text'] = f'join{str(playerNum)}'
         await notify_public_message(data)
-    else:
+    elif (data['text'] == 'join' and game.game_on == True):
         data = game.add_player(data['sender'])
         await notify_client(data)
-
+    elif (data['text'] == 'ready'):
+        data['text'] = 'start'
+        data['sender'] = 'game'
+        await notify_public_message(data)
 
 async def room(websocket, path):
     cid = createID(4)

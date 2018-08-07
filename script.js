@@ -100,11 +100,16 @@ function handleGameMessages(data) {
                 updateAvtData('join',data.sender,2);
             } else {
                 updateOppData('join',data.sender,2);
+                let message = `{"tag": "game", "sender":"${clientId}", "receiver": "game", "text":"ready"}`;
+                connection.send(message);
             }
             break;
         case 'try later.':
             updateAvtData('reject',playerList[0],1);
             updateOppData('reject',playerList[1],2);
+            break;
+        case 'start':
+            updateBoard();
             break;
         case 'move':
             console.log('move made');
@@ -143,4 +148,25 @@ function updateOppData(uType,player,playerNum) {
             console.log('unknown');
             break;
     }
+}
+
+function updateBoard(boardArr = 'blank') {
+    if (boardArr === 'blank') {
+        buildBoard();
+    }
+    else {
+        console.log('board updated');
+    }
+}
+
+function buildBoard() {
+    let cols = ['0','1','2','3','4'];
+    let rows = ['0','1','2','3','4'];
+    let square = (r,c) => {
+        let id = `s-${r}${c}`;
+        return `<div class ="square" id="${id}"></div>`
+    }
+    let grid = rows.map( (r) => cols.map( (c) => square(r+c) ) );
+    let squares = grid.map( (r) => r.join('') ).join('');
+    board.innerHTML = squares;
 }
