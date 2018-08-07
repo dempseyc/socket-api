@@ -16,8 +16,8 @@ connect().then((socket)=>{
 
 // cache DOM
 let room_list = document.getElementById('room-list');
-let messages_list = document.getElementById('chat-messages');
-let chat_form = document.getElementById('chat-form');
+let messages_list = document.getElementById('room-chat-messages');
+let chat_form = document.getElementById('room-chat-form');
 chat_form.addEventListener('submit', pubMessage);
 
 // handle ws events
@@ -39,7 +39,6 @@ function handleMessages (e) {
             break
     }
 
-
 };
 
 function updateMessagesList(data) {
@@ -58,7 +57,18 @@ function pubMessage (event) {
     let txt = event.target.elements[0].value;
     let tag = 'public';
     let message = `{"tag":"${tag}", "sender":"${clientId}", "text":"${txt}"}`; 
-    // if (connection.readyState == 1) {
-        connection.send(message);
-    // }
+    connection.send(message);
+}
+
+///////////////////////// game stuff
+
+let oppData = document.getElementById('opponent');
+let avtData = document.getElementById('avatar');
+let board = document.getElementById('board');
+
+avtData.addEventListener('click', () => registerPlayer() );
+
+function registerPlayer() {
+    let message = `{"tag": "game", "sender":"${clientId}", "text":"join"}`;
+    connection.send(message);
 }

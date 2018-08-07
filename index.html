@@ -7,14 +7,18 @@
         <title>WebSocket demo</title>
     </head>
     <body>
-        <div class="chat-area">
-            <form id="chat-form">
-                <input name="chat-message" type="text"/>
+        <div class="room-chat-area">
+            <form id="room-chat-form">
+                <input name="room-chat-message" type="text"/>
             </form>
-            <ul id="chat-messages"></ul>
+            <ul id="room-chat-messages"></ul>
             <ul id="room-list"></ul>
         </div>
-        <div class="game-area"></div>
+        <div class="game-area">
+            <div id="opponent"><span>waiting for opponent...</span></div>
+            <div class="board"></div>
+            <div id="avatar"><span>click to play</span></div>
+        </div>
         <script src="./script.js"></script>
     </body>
 </html>

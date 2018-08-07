@@ -4,12 +4,22 @@ import json
 import logging
 import string
 import random
+import game
 
 logging.basicConfig()
 
 STATE = {'value': 0}
 
 clients = {}
+
+game = game.Game()
+
+def handleGame(data):
+    if (data['text'] == 'join'):
+        game.add_player(data['sender'])
+    else:
+        game.handle_message(data)
+
 
 def createID(n):
     chars = string.ascii_letters
@@ -62,8 +72,10 @@ async def room(websocket, path):
             data = json.loads(message)
             if data['tag'] == 'public':
                 await notify_public_message(data)
-            if data['tag'] == 'direct':
+            elif data['tag'] == 'direct':
                 await notify_client(data)
+            elif data['tag'] == 'game':
+                handleGame(data)
             else:
                 logging.error(
                     "unsupported event: {}", data)
