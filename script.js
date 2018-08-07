@@ -35,6 +35,8 @@ function handleMessages (e) {
         case 'public':
             updateMessagesList(data);
             break;
+        case 'game':
+            handleGameMessages(data);
         default:
             break
     }
@@ -66,9 +68,47 @@ let oppData = document.getElementById('opponent');
 let avtData = document.getElementById('avatar');
 let board = document.getElementById('board');
 
-avtData.addEventListener('click', () => registerPlayer() );
+avtData.addEventListener('click', () => {
+    registerPlayer();
+    // updateAvtData();
+ });
 
 function registerPlayer() {
-    let message = `{"tag": "game", "sender":"${clientId}", "text":"join"}`;
+    let message = `{"tag": "game", "sender":"${clientId}", "receiver": "game", "text":"join"}`;
     connection.send(message);
+}
+
+function handleGameMessages(data) {
+    switch (data.text) {
+        case 'join1':
+            if (data.sender == clientId) {
+                updateAvtData(1);
+            } else {
+                updateOppData(data.sender,1);
+            }
+            break;
+        case 'join2':
+            if (data.sender == clientId) {
+                updateAvtData(2);
+            } else {
+                updateOppData(data.sender,2);
+            }
+            break;
+        case 'move':
+            console.log('move made');
+            break;
+        case 'card':
+            console.log('card drawn');
+            break;
+        default:
+            break;
+    }
+}
+
+function updateAvtData(playerNum) {
+    avtData.innerHTML = `<span>${clientId} as Player${playerNum}</span>`;
+}
+
+function updateOppData(oppId,playerNum) {
+    oppData.innerHTML = `<span>${oppId} as Player${playerNum}</span>`;
 }

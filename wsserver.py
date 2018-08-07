@@ -14,13 +14,6 @@ clients = {}
 
 game = game.Game()
 
-def handleGame(data):
-    if (data['text'] == 'join'):
-        game.add_player(data['sender'])
-    else:
-        game.handle_message(data)
-
-
 def createID(n):
     chars = string.ascii_letters
     new_id = ""
@@ -62,6 +55,14 @@ async def unregister(cid):
     clients.pop(cid, None)
     await notify_clients()
 
+async def handleGame(data):
+    if (data['text'] == 'join'):
+        playerNum = game.add_player(data['sender'])
+        data['text'] = f'join{str(playerNum)}'
+        await notify_public_message(data)
+    else:
+        game.handle_message(data)
+
 async def room(websocket, path):
     cid = createID(4)
     await register(websocket, cid)
@@ -75,7 +76,7 @@ async def room(websocket, path):
             elif data['tag'] == 'direct':
                 await notify_client(data)
             elif data['tag'] == 'game':
-                handleGame(data)
+                await handleGame(data)
             else:
                 logging.error(
                     "unsupported event: {}", data)
