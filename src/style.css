@@ -1,0 +1,28 @@
+body {
+    color: red;
+}
+
+.room-chat-area {
+    width: 25%;
+    left: 5%;
+}
+
+.game-area {
+    position: absolute;
+    margin-left: 30%;
+    top: 5%;
+    width: 75%;
+}
+
+#board {
+    display: flex;
+    flex-wrap: wrap;
+    width: 500px;
+    height: 500px;
+}
+
+.square {
+    height: 100px;
+    width: 100px;
+    outline: 1px solid black;
+}

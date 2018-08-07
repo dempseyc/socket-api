@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="./src/style.css">
+        <title>WebSocket demo</title>
+    </head>
+    <body>
+        <div class="room-chat-area">
+            <form id="room-chat-form">
+                <input name="room-chat-message" type="text">
+            </form>
+            <ul id="room-chat-messages"></ul>
+            <ul id="room-list"></ul>
+        </div>
+        <div class="game-area">
+            <div id="opponent"><span>waiting for opponent...</span></div>
+            <div id="board">
+                <div class="square" id="s-00"></div>
+                <div class="square" id="s-01"></div>
+                <div class="square" id="s-02"></div>
+                <div class="square" id="s-03"></div>
+                <div class="square" id="s-04"></div>
+                <div class="square" id="s-10"></div>
+                <div class="square" id="s-11"></div>
+                <div class="square" id="s-12"></div>
+                <div class="square" id="s-13"></div>
+                <div class="square" id="s-14"></div>
+                <div class="square" id="s-20"></div>
+                <div class="square" id="s-21"></div>
+                <div class="square" id="s-22"></div>
+                <div class="square" id="s-23"></div>
+                <div class="square" id="s-24"></div>
+                <div class="square" id="s-30"></div>
+                <div class="square" id="s-31"></div>
+                <div class="square" id="s-32"></div>
+                <div class="square" id="s-33"></div>
+                <div class="square" id="s-34"></div>
+                <div class="square" id="s-40"></div>
+                <div class="square" id="s-41"></div>
+                <div class="square" id="s-42"></div>
+                <div class="square" id="s-43"></div>
+                <div class="square" id="s-44"></div>
+            </div>
+            <div id="avatar"><span>click to play</span></div>
+        </div>
+        <script src="main.js"></script>
+    
+</body>
+</html>
