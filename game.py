@@ -3,21 +3,32 @@ import random
 class Game(object):
     def __init__(self):
         self.board = [[None for _ in range(5)] for _ in range(5)]
-        self.players = set()
+        self.players = []
         self.game_on = False
         self.whos_turn = None
         self.deck1 = self.build_deck()
         self.deck2 = self.build_deck()
+        self.decks = [self.deck1,self.deck2]
+        print(self.decks)
+
+    def reset(self):
+        self.quit_game()
+        self.__init__()
+        message = self.create_message('game','game','game','reset')
+        return message;
 
     def build_deck(self):
         cards = [1,1,1,1,1,1,1,1,1,1,1,1,2,2,3]
-        shffl = random.shuffle(cards)
-        return shffl;
+        random.shuffle(cards)
+        return cards;
 
+    def deal_cards(self,player):
+        message = self.create_message('game', 'game', self.players[player-1], 'cards', self.decks[player-1])
+        return message;
 
     def add_player(self,player):
         if (not self.game_on):
-            self.players.add(player)
+            self.players.append(player)
             if (len(self.players) > 1):
                 self.start_game()
             return len(self.players)
@@ -37,7 +48,13 @@ class Game(object):
 
     def start_game(self):
         self.game_on = True
-        text = 'game_on'
+        self.whos_turn = self.players[0]
+        text = 'game on'
+        print(text)
+
+    def quit_game(self):
+        self.game_on = False
+        text = 'game off'
         print(text)
 
     def reply_to_bad_joiner(self, player):

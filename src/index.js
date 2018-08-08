@@ -67,23 +67,32 @@ function pubMessage (event) {
     let tag = 'public';
     let message = `{"tag":"${tag}", "sender":"${clientId}", "text":"${txt}"}`; 
     connection.send(message);
+    event.target.elements[0].value = '';
 }
 
 ///////////////////////// game stuff
+let gameOn = false;
+let myTurn = false;
 
+let playerList = [];
+let myNum = null;
+let board = document.getElementById('board');
 let oppData = document.getElementById('opponent');
 let avtData = document.getElementById('avatar');
-let board = document.getElementById('board');
-let playerList = [];
+let pieces = [];
+let chosenP = null;
 
 avtData.addEventListener('click', () => {
-    registerPlayer();
+    if (!gameOn) {
+        registerPlayer();
+    }
     // updateAvtData();
  });
 
 function registerPlayer() {
     let message = `{"tag": "game", "sender":"${clientId}", "receiver": "game", "text":"join"}`;
     connection.send(message);
+    gameOn = true;
 }
 
 function handleGameMessages(data) {
@@ -91,7 +100,9 @@ function handleGameMessages(data) {
         case 'join1':
             playerList.push(data.sender);
             if (data.sender == clientId) {
-                updateAvtData('join',data.sender,1);
+                myNum = 1;
+                updateAvtData('join',data.sender,myNum);
+                updateAvtData('my_turn');
             } else {
                 updateOppData('join',data.sender,1);
             }
@@ -99,7 +110,8 @@ function handleGameMessages(data) {
         case 'join2':
             playerList.push(data.sender);
             if (data.sender == clientId) {
-                updateAvtData('join',data.sender,2);
+                myNum = 2;
+                updateAvtData('join',data.sender,myNum);
             } else {
                 updateOppData('join',data.sender,2);
                 let message = `{"tag": "game", "sender":"${clientId}", "receiver": "game", "text":"ready"}`;
@@ -116,8 +128,16 @@ function handleGameMessages(data) {
         case 'move':
             console.log('move made');
             break;
-        case 'card':
-            console.log('card drawn');
+        case 'cards':
+            pieces = data.board;
+            updateAvtData('pieces');
+            break;
+        case 'reset':
+            updateBoard();
+            updateAvtData('reset');
+            updateOppData('reset');
+            playerList = [];
+            gameOn = false;
             break;
         default:
             break;
@@ -128,9 +148,20 @@ function updateAvtData(uType,player,playerNum) {
     switch (uType) {
         case 'join':
             avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            updatePieceContainer();
             break;
         case 'reject':
             avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            break;
+        case 'reset':
+            avtData.innerHTML = `<span>waiting for opponent...</span>`;
+            break;
+        case 'pieces':
+            updatePieceContainer('pieces');
+            break;
+        case 'my_turn':
+            myTurn = myTurn ? false : true;
+            myTurn ? avtData.classList.add('my-turn') : avtData.classList.remove('my_turn');
             break;
         default:
             console.log('unknown');
@@ -145,6 +176,9 @@ function updateOppData(uType,player,playerNum) {
             break;
         case 'reject':
             oppData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
+            break;
+        case 'reset':
+            oppData.innerHTML = `<span>click to play</span>`;
             break;
         default:
             console.log('unknown');
@@ -162,6 +196,7 @@ function updateBoard(boardArr = 'blank') {
 }
 
 function buildBoard() {
+    listenSquares();
     // let cols = ['0','1','2','3','4'];
     // let rows = ['0','1','2','3','4'];
     // let square = (r,c) => {
@@ -172,4 +207,64 @@ function buildBoard() {
     // let squares = grid.map( (r) => r.join('') ).join('');
     // board.innerHTML = squares;
     console.log("board ready");
+}
+
+function updatePieceContainer(change, idx) {
+    let pC = document.getElementsByClassName('piece-container')[0];
+    if (!pC) {
+        let pC = document.createElement('div');
+        pC.classList.add('piece-container');
+        avtData.appendChild(pC);
+        // console.log(pC);
+    } else {
+        switch(change) {
+            case 'pieces':
+                pieces.forEach((p,i) => {
+                    let pCp = document.createElement('div');
+                    pCp.setAttribute('id',`pid-${i}`);
+                    pCp.classList.add("piece",`p-${p}`);
+                    pCp.innerHTML = `${p}`;
+                    pC.appendChild(pCp);
+                });
+                listenPieces();
+                break;
+            default:
+                break
+        }
+    }
+}
+
+function listenSquares() {
+    let ss = document.getElementsByClassName('square');
+    [].forEach.call(ss, (s) => {
+        s.addEventListener('click', chooseSquare);
+    });
+}
+
+function listenPieces() {
+    let pCps = document.getElementsByClassName('piece');
+    [].forEach.call(pCps, (pCp) => {
+        pCp.addEventListener('click', choosePiece); 
+    });
+}
+
+function choosePiece(event) {
+    let pCps = document.getElementsByClassName('piece');
+    [].forEach.call(pCps, (pCp) => {
+        pCp.classList.remove('chosen');
+    });
+    event.target.classList.add('chosen');
+    chosenP = event.target.getAttribute('id');
+}
+
+function chooseSquare(event) {
+    if (myTurn) {
+        let pieceVal = document.getElementById(chosenP).classList[1];
+        event.target.classList.add('occ', `${myNum}`, `${chosenP}`);
+        //make move
+        let squareId = event.target.getAttribute('id');
+        console.log('dispatch move', pieceVal, squareId);
+        updateAvtData('my_turn');
+        console.log('unshow piece in piece container');
+    }
 }

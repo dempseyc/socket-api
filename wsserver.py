@@ -4,6 +4,7 @@ import json
 import logging
 import string
 import random
+
 import game
 
 logging.basicConfig()
@@ -54,6 +55,12 @@ async def sendCID(cid):
 async def unregister(cid):
     clients.pop(cid, None)
     await notify_clients()
+    if cid in game.players:
+        data = game.reset()
+        await notify_public_message(data)
+        data['tag'] = 'public'
+        data['text'] = 'a player quit, game reset'
+        await notify_public_message(data)
 
 async def handleGame(data):
     if (data['text'] == 'join' and game.game_on == False):
@@ -67,6 +74,10 @@ async def handleGame(data):
         data['text'] = 'start'
         data['sender'] = 'game'
         await notify_public_message(data)
+        cards = game.deal_cards(1)
+        await notify_client(cards)
+        cards = game.deal_cards(2)
+        await notify_client(cards)
 
 async def room(websocket, path):
     cid = createID(4)

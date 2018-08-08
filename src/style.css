@@ -2,6 +2,10 @@ body {
     color: red;
 }
 
+ul {
+    list-style-type: none;
+}
+
 .room-chat-area {
     width: 25%;
     left: 5%;
@@ -9,9 +13,10 @@ body {
 
 .game-area {
     position: absolute;
-    margin-left: 30%;
-    top: 5%;
-    width: 75%;
+    top: 2%;
+    left: 25%;
+    width: 500px;
+    margin: 0 auto;
 }
 
 #board {
@@ -21,8 +26,46 @@ body {
     height: 500px;
 }
 
+#opponent, #avatar {
+    text-align: center;
+    width: 500px;
+    height: 75px;
+    background: grey;
+}
+#opponent>span, #avatar>span {
+    line-height: 1.5em;
+    color: white;
+}
+#opponent {
+    height: 2em;
+}
+
 .square {
     height: 100px;
     width: 100px;
     outline: 1px solid black;
+}
+
+.my-turn {
+    border: 2px solid green;
+}
+
+.piece-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.piece {
+    background: white;
+    width: 5%;
+    margin: 1%;
+}
+
+.chosen {
+    outline: 2px solid blue;
+}
+
+.nodisplay {
+    display: none;
 }
