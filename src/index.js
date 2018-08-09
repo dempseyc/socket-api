@@ -222,7 +222,6 @@ function updateBoard(boardArr = 'blank') {
                 square.className = 'square';
             }
         }));
-        // console.log('board updated', boardArr);
     }
 }
 
@@ -256,7 +255,6 @@ function updateCardContainer(change, idx) {
             case 'cards':
                 cards.forEach((cVal,i) => {
                     let card = document.createElement('div');
-                    card.setAttribute('id',`cid-${i}`);
                     card.classList.add('card',`c-${cVal}`,`${cardColor()}`);
                     card.innerHTML = `${cVal}`;
                     cardContainer.appendChild(card);
@@ -286,20 +284,17 @@ function chooseCard(event) {
         card.classList.remove('chosen');
     });
     event.target.classList.add('chosen');
-    chosenC = event.target.getAttribute('id');
+    chosenC = event.target.classList[1];
 }
 
 function chooseSquare(event) {
     let square = event.target;
     if (myTurn) {
-        let card = document.getElementById(chosenC);
+        let card = document.getElementsByClassName(`${chosenC}`)[0];
         let cardVal = card.classList[1].split('-')[1];
+        console.log('cardval=',cardVal);
         if (square.classList[1] !== 'occupied' || cardVal === '2' ) {
-            console.log('cardval=',cardVal);
-            square.classList.add('occupied',`${chosenC}`);
-            //make move
             let squareId = square.getAttribute('id');
-            // console.log('dispatch move', cardVal, squareId);
             sendMove(cardVal, squareId);
             // remove card from hand
             card.parentNode.removeChild(card);
