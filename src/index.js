@@ -20,29 +20,29 @@ connect().then((socket)=>{
 let room_list = document.getElementById('room-list');
 let messages_list = document.getElementById('room-chat-messages');
 let chat_form = document.getElementById('room-chat-form');
-chat_form.addEventListener('submit', pubMessage);
+chat_form.addEventListener('submit', sendPubMessage);
 
 // handle ws events
 
 function handleMessages (e) {
-    let data = JSON.parse(e.data);
-    console.log(data);
-    switch (data.tag) {
+    let message = JSON.parse(e.data);
+    console.log(message);
+    switch (message.tag) {
         case 'clients':
-            updateClientList(data);
+            updateClientList(message);
             break;
         case 'register':
-            clientId = data.text;
+            clientId = message.text;
             break;
         case 'public':
-            updateMessagesList(data);
+            updateMessagesList(message);
             break;
         case 'direct':
-            updateMessagesList(data);
-            if (data.sender === 'game') { handleGameMessages(data); }
+            updateMessagesList(message);
+            if (message.sender === 'game') { handleGameMessages(message); }
             break;
         case 'game':
-            handleGameMessages(data);
+            handleGameMessages(message);
             break;
         default:
             break
@@ -50,23 +50,27 @@ function handleMessages (e) {
 
 };
 
-function updateMessagesList(data) {
+function updateMessagesList(message) {
     let new_message = document.createElement('li');
-    new_message.innerHTML = `<span>${data.sender}: ${data.text}</span>`;
+    new_message.innerHTML = `<span>${message.sender}: ${message.text}</span>`;
     messages_list.appendChild(new_message);
 }
 
-function updateClientList(data) {
-let new_list = data.list.map((clientHandle) => `<li>${clientHandle}</li>`).join('');
+function updateClientList(message) {
+let new_list = message.list.map((clientHandle) => `<li>${clientHandle}</li>`).join('');
     room_list.innerHTML = new_list;
 }
 
-function pubMessage (event) {
+function sendPubMessage (event) {
     event.preventDefault();
-    let txt = event.target.elements[0].value;
+    let text = event.target.elements[0].value;
     let tag = 'public';
-    let message = `{"tag":"${tag}", "sender":"${clientId}", "text":"${txt}"}`; 
-    connection.send(message);
+    let m = {
+        "tag": tag,
+        "sender": clientId,
+        "text": text
+        }; 
+    connection.send(JSON.stringify(m));
     event.target.elements[0].value = '';
 }
 
@@ -92,32 +96,43 @@ avtData.addEventListener('click', () => {
  });
 
 function registerPlayer() {
-    let message = `{"tag": "game", "sender":"${clientId}", "receiver": "game", "text":"join"}`;
-    connection.send(message);
+    let m = {
+        "tag": "game",
+        "sender": clientId,
+        "receiver": "game",
+        "text": "join"
+        };
+    connection.send(JSON.stringify(m));
     gameOn = true;
 }
 
-function handleGameMessages(data) {
-    switch (data.text) {
+function handleGameMessages(message) {
+    switch (message.text) {
         case 'join1':
-            playerList.push(data.sender);
-            if (data.sender == clientId) {
+            playerList.push(message.sender);
+            if (message.sender == clientId) {
                 myNum = 1;
-                updateAvtData('join',data.sender,myNum);
+                updateAvtData('join',message.sender,myNum);
                 updateAvtData('my_turn');
             } else {
-                updateOppData('join',data.sender,1);
+                updateOppData('join',message.sender,1);
             }
             break;
         case 'join2':
-            playerList.push(data.sender);
-            if (data.sender == clientId) {
+            playerList.push(message.sender);
+            console.log(playerList);
+            if (message.sender == clientId) {
                 myNum = 2;
-                updateAvtData('join',data.sender,myNum);
+                updateAvtData('join',message.sender,myNum);
             } else {
-                updateOppData('join',data.sender,2);
-                let message = `{"tag": "game", "sender":"${clientId}", "receiver": "game", "text":"ready"}`;
-                connection.send(message);
+                updateOppData('join',message.sender,2);
+                let m = {
+                    "tag": "game",
+                    "sender": clientId,
+                    "receiver": "game",
+                    "text":"ready"
+                };
+                connection.send(JSON.stringify(m));
             }
             break;
         case 'try later.':
@@ -128,11 +143,11 @@ function handleGameMessages(data) {
             updateBoard();
             break;
         case 'board':
-            updateBoard(data.board);
+            updateBoard(message.data);
             updateAvtData('my_turn');
             break;
         case 'cards':
-            cards = data.board;
+            cards = message.data;
             updateAvtData('cards');
             break;
         case 'reset':
@@ -276,20 +291,20 @@ function chooseSquare(event) {
         //make move
         let squareId = event.target.getAttribute('id');
         // console.log('dispatch move', cardVal, squareId);
-        dispatchMove(cardVal, squareId);
+        sendMove(cardVal, squareId);
         card.classList.add('nodisplay');
     }
 }
 
-function dispatchMove(card, square) {
+function sendMove(card, square) {
     let c = card.split('-')[1];
     let s = square.split('-')[1];
-    let message = {
+    let m = {
         "tag": "game",
         "sender": `${clientId}`,
         "receiver": "game",
         "text": "move",
-        "board": [myNum,c,s]
+        "data": [myNum,c,s]
     }
-    connection.send(JSON.stringify(message));
+    connection.send(JSON.stringify(m));
 }

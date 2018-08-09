@@ -6,9 +6,10 @@ class Game(object):
         self.players = []
         self.game_on = False
         self.whos_turn = None
-        self.deck1 = self.build_deck()
-        self.deck2 = self.build_deck()
+        self.deck1 = self.__build_deck()
+        self.deck2 = self.__build_deck()
         self.decks = [self.deck1,self.deck2]
+        self.phase = 'init'
 
     def reset(self):
         self.quit_game()
@@ -16,7 +17,7 @@ class Game(object):
         message = self.create_message('game','game','game','reset')
         return message;
 
-    def build_deck(self):
+    def __build_deck(self):
         cards = [1,1,1,1,1,1,1,1,1,1,1,1,2,2,3]
         random.shuffle(cards)
         return cards;
@@ -34,20 +35,19 @@ class Game(object):
         else:
             return self.reply_to_bad_joiner(player)
 
-    def process_message(self,data):
-        if (data['sender'] == self.whos_turn):
-            return self.apply_move(data)
+    def process_message(self,message):
+        if (message['sender'] == self.whos_turn):
+            return self.apply_move(message)
             # print('pm')
 
-    def create_message(self, tag, sender, receiver, text, board=None):
-        message = {'tag': tag, 'sender': sender, 'receiver': receiver, 'text': text, 'board': board}
+    def create_message(self, tag, sender, receiver, text, data=None):
+        message = {'tag': tag, 'sender': sender, 'receiver': receiver, 'text': text, 'data': data}
         return message;
 
-    def apply_move(self, data):
-        player = data['board'][0]
-        card_val = data['board'][1]
-        square = data['board'][2]
-        print(square)
+    def apply_move(self, message):
+        player = message['data'][0]
+        card_val = message['data'][1]
+        square = message['data'][2]
         self.board[int(square[0])][int(square[1])] = str(player)+'-'+str(card_val)
         if (self.whos_turn == self.players[0]):
             self.whos_turn = self.players[1]
@@ -67,7 +67,7 @@ class Game(object):
         print(text)
 
     def reply_to_bad_joiner(self, player):
-        message = self.create_message('direct', 'game', player, 'try later.', self.board)
+        message = self.create_message('direct', 'game', player, 'try later.')
         return message;
 
 
