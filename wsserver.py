@@ -74,13 +74,16 @@ async def handleGame(data):
         data['text'] = 'start'
         data['sender'] = 'game'
         await notify_public_message(data)
-        cards = game.deal_cards(1)
+        cards = game.deal_3(1)
         await notify_client(cards)
-        cards = game.deal_cards(2)
+        cards = game.deal_3(2)
         await notify_client(cards)
     elif (data['text'] == 'move'):
         data = game.process_message(data)
         await notify_public_message(data)
+        player = game.players.index(game.whos_turn)+1
+        cards = game.deal_1(player)
+        await notify_client(cards)
 
 async def room(websocket, path):
     cid = createID(4)

@@ -83,6 +83,7 @@ let myNum = null;
 let board = document.getElementById('board');
 let oppData = document.getElementById('opponent');
 let avtData = document.getElementById('avatar');
+let cardContainer = document.getElementsByClassName('card-container')[0];
 let cards = [];
 let chosenC = null;
 let colors = ['color1','color2'];
@@ -211,16 +212,23 @@ function updateBoard(boardArr = 'blank') {
         buildBoard();
     }
     else {
-        boardArr.forEach((r,i)=> r.forEach((c,j)=>{
-            if (c !== null) {
-                let idx = 's-'+String(i)+String(j);
-                let p_c = c.split('-');
-                let square = document.getElementById(`${idx}`);
-                square.classList.add(`color${p_c[0]}`);
+        boardArr.forEach((r,i)=> r.forEach((s,j)=>{
+            let idx = 's-'+String(i)+String(j);
+            let square = document.getElementById(`${idx}`);
+            if (s !== '0') {
+                square.className = 'square';
+                square.classList.add('occupied', `color${s}`);
+            } else {
+                square.className = 'square';
             }
         }));
-        console.log('board updated', boardArr);
+        // console.log('board updated', boardArr);
     }
+}
+
+function returnCard(card) {
+    let cardFromBoard = document.getElementById(card);
+    cardFromBoard.classList.remove('nodisplay');
 }
 
 function buildBoard() {
@@ -238,23 +246,22 @@ function buildBoard() {
 }
 
 function updateCardContainer(change, idx) {
-    let cardContainer = document.getElementsByClassName('card-container')[0];
     if (!cardContainer) {
-        let cardContainer = document.createElement('div');
+        cardContainer = document.createElement('div');
         cardContainer.classList.add('card-container');
         avtData.appendChild(cardContainer);
         // console.log(cardContainer);
     } else {
         switch(change) {
             case 'cards':
-                cards.forEach((c,i) => {
+                cards.forEach((cVal,i) => {
                     let card = document.createElement('div');
-                    card.setAttribute('id',`pid-${i}`);
-                    card.classList.add('card',`p-${c}`,`${cardColor()}`);
-                    card.innerHTML = `${c}`;
+                    card.setAttribute('id',`cid-${i}`);
+                    card.classList.add('card',`c-${cVal}`,`${cardColor()}`);
+                    card.innerHTML = `${cVal}`;
                     cardContainer.appendChild(card);
+                    listenCard(card);
                 });
-                listenCards();
                 break;
             default:
                 break
@@ -269,11 +276,8 @@ function listenSquares() {
     });
 }
 
-function listenCards() {
-    let cards = document.getElementsByClassName('card');
-    [].forEach.call(cards, (card) => {
-        card.addEventListener('click', chooseCard); 
-    });
+function listenCard(card) {
+    card.addEventListener('click', chooseCard); 
 }
 
 function chooseCard(event) {
@@ -289,27 +293,28 @@ function chooseSquare(event) {
     let square = event.target;
     if (myTurn) {
         let card = document.getElementById(chosenC);
-        let cardVal = card.classList[1];
-        if (square.classList[1] !== 'occupied') {
-            square.classList.add('occupied', `${myNum}`, `${chosenC}`);
+        let cardVal = card.classList[1].split('-')[1];
+        if (square.classList[1] !== 'occupied' || cardVal === '2' ) {
+            console.log('cardval=',cardVal);
+            square.classList.add('occupied',`${chosenC}`);
             //make move
             let squareId = square.getAttribute('id');
             // console.log('dispatch move', cardVal, squareId);
             sendMove(cardVal, squareId);
-            card.classList.add('nodisplay');
-        } 
+            // remove card from hand
+            card.parentNode.removeChild(card);
+        }
     }
 }
 
-function sendMove(card, square) {
-    let c = card.split('-')[1];
+function sendMove(cardVal, square) {
     let s = square.split('-')[1];
     let m = {
         "tag": "game",
         "sender": `${clientId}`,
         "receiver": "game",
         "text": "move",
-        "data": [myNum,c,s]
+        "data": [myNum,cardVal,s]
     }
     connection.send(JSON.stringify(m));
 }

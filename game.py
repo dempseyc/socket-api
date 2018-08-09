@@ -2,7 +2,7 @@ import random
 
 class Game(object):
     def __init__(self):
-        self.board = [[None for _ in range(5)] for _ in range(5)]
+        self.board = [['0' for _ in range(5)] for _ in range(5)]
         self.players = []
         self.game_on = False
         self.whos_turn = None
@@ -10,6 +10,7 @@ class Game(object):
         self.deck2 = self.__build_deck()
         self.decks = [self.deck1,self.deck2]
         self.phase = 'init'
+        self.bombs_on_board = []
 
     def reset(self):
         self.quit_game()
@@ -22,9 +23,20 @@ class Game(object):
         random.shuffle(cards)
         return cards;
 
-    def deal_cards(self,player):
-        message = self.create_message('game', 'game', self.players[player-1], 'cards', self.decks[player-1])
+    def deal_3(self,player):
+        message = self.create_message('game', 'game', self.players[player-1], 'cards', self.decks[player-1][:3:])
+        del self.decks[player-1][:3:]
         return message;
+
+    def deal_1(self,player):
+        message = self.create_message('game', 'game', self.players[player-1], 'cards', self.decks[player-1][:1:])
+        del self.decks[player-1][:1:]
+        self.switch_turn()
+        return message;
+
+    def return_cards(self,player,cards):
+        for c in cards:
+            self.decks[player-1].append(c)
 
     def add_player(self,player):
         if (not self.game_on):
@@ -48,12 +60,28 @@ class Game(object):
         player = message['data'][0]
         card_val = message['data'][1]
         square = message['data'][2]
+
+        if card_val == 2:
+            existing_card = self.board[int(square[0])][int(square[1])]
+            if existing_card:
+                self.return_cards(player,[card_val])
+        elif card_val == 3:
+            self.load_bomb(square[0],square[1],player)
         self.board[int(square[0])][int(square[1])] = str(player)+'-'+str(card_val)
+        return self.create_message('game','game','game','board',self.strip_private_info(self.board))
+
+    def strip_private_info(self,board_data):
+        public_board = [[s[0] for s in row] for row in board_data]
+        return public_board;
+
+    def load_bomb(self,cy,cx,player):
+        self.bombs_on_board.append([cy,cx,player])
+
+    def switch_turn(self):
         if (self.whos_turn == self.players[0]):
             self.whos_turn = self.players[1]
         else:
             self.whos_turn = self.players[0]
-        return self.create_message('game','game','game','board',self.board)
 
     def start_game(self):
         self.game_on = True
