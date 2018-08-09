@@ -126,6 +126,8 @@ function handleGameMessages(message) {
                 updateAvtData('join',message.sender,myNum);
             } else {
                 updateOppData('join',message.sender,2);
+            }
+            if (playerList[0] === clientId) {
                 let m = {
                     "tag": "game",
                     "sender": clientId,
@@ -284,15 +286,18 @@ function chooseCard(event) {
 }
 
 function chooseSquare(event) {
+    let square = event.target;
     if (myTurn) {
         let card = document.getElementById(chosenC);
         let cardVal = card.classList[1];
-        event.target.classList.add('occupied', `${myNum}`, `${chosenC}`);
-        //make move
-        let squareId = event.target.getAttribute('id');
-        // console.log('dispatch move', cardVal, squareId);
-        sendMove(cardVal, squareId);
-        card.classList.add('nodisplay');
+        if (square.classList[1] !== 'occupied') {
+            square.classList.add('occupied', `${myNum}`, `${chosenC}`);
+            //make move
+            let squareId = square.getAttribute('id');
+            // console.log('dispatch move', cardVal, squareId);
+            sendMove(cardVal, squareId);
+            card.classList.add('nodisplay');
+        } 
     }
 }
 
