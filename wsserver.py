@@ -78,6 +78,9 @@ async def handleGame(data):
         await notify_client(cards)
         cards = game.deal_cards(2)
         await notify_client(cards)
+    elif (data['text'] == 'move'):
+        data = game.process_message(data)
+        await notify_public_message(data)
 
 async def room(websocket, path):
     cid = createID(4)

@@ -50,16 +50,23 @@ ul {
     border: 2px solid green;
 }
 
-.piece-container {
+.card-container {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
 }
 
-.piece {
-    background: white;
+.card {
+    color: white;
     width: 5%;
     margin: 1%;
+}
+
+.color1 {
+    background: orange;
+}
+.color2 {
+    background: magenta;
 }
 
 .chosen {

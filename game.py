@@ -9,7 +9,6 @@ class Game(object):
         self.deck1 = self.build_deck()
         self.deck2 = self.build_deck()
         self.decks = [self.deck1,self.deck2]
-        print(self.decks)
 
     def reset(self):
         self.quit_game()
@@ -36,15 +35,25 @@ class Game(object):
             return self.reply_to_bad_joiner(player)
 
     def process_message(self,data):
-        if (data.sender == self.whos_turn):
-            self.do_logic(data)
+        if (data['sender'] == self.whos_turn):
+            return self.apply_move(data)
+            # print('pm')
 
     def create_message(self, tag, sender, receiver, text, board=None):
         message = {'tag': tag, 'sender': sender, 'receiver': receiver, 'text': text, 'board': board}
         return message;
 
-    def do_logic(self, data):
-        print(data['text'])
+    def apply_move(self, data):
+        player = data['board'][0]
+        card_val = data['board'][1]
+        square = data['board'][2]
+        print(square)
+        self.board[int(square[0])][int(square[1])] = str(player)+'-'+str(card_val)
+        if (self.whos_turn == self.players[0]):
+            self.whos_turn = self.players[1]
+        else:
+            self.whos_turn = self.players[0]
+        return self.create_message('game','game','game','board',self.board)
 
     def start_game(self):
         self.game_on = True

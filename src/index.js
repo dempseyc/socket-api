@@ -79,8 +79,10 @@ let myNum = null;
 let board = document.getElementById('board');
 let oppData = document.getElementById('opponent');
 let avtData = document.getElementById('avatar');
-let pieces = [];
-let chosenP = null;
+let cards = [];
+let chosenC = null;
+let colors = ['color1','color2'];
+let cardColor = ()=>colors[myNum-1];
 
 avtData.addEventListener('click', () => {
     if (!gameOn) {
@@ -125,12 +127,13 @@ function handleGameMessages(data) {
         case 'start':
             updateBoard();
             break;
-        case 'move':
-            console.log('move made');
+        case 'board':
+            updateBoard(data.board);
+            updateAvtData('my_turn');
             break;
         case 'cards':
-            pieces = data.board;
-            updateAvtData('pieces');
+            cards = data.board;
+            updateAvtData('cards');
             break;
         case 'reset':
             updateBoard();
@@ -148,7 +151,7 @@ function updateAvtData(uType,player,playerNum) {
     switch (uType) {
         case 'join':
             avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
-            updatePieceContainer();
+            updateCardContainer();
             break;
         case 'reject':
             avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
@@ -156,12 +159,12 @@ function updateAvtData(uType,player,playerNum) {
         case 'reset':
             avtData.innerHTML = `<span>waiting for opponent...</span>`;
             break;
-        case 'pieces':
-            updatePieceContainer('pieces');
+        case 'cards':
+            updateCardContainer('cards');
             break;
         case 'my_turn':
             myTurn = myTurn ? false : true;
-            myTurn ? avtData.classList.add('my-turn') : avtData.classList.remove('my_turn');
+            myTurn ? avtData.classList.add('my-turn') : avtData.classList.remove('my-turn');
             break;
         default:
             console.log('unknown');
@@ -191,7 +194,15 @@ function updateBoard(boardArr = 'blank') {
         buildBoard();
     }
     else {
-        console.log('board updated');
+        boardArr.forEach((r,i)=> r.forEach((c,j)=>{
+            if (c !== null) {
+                let idx = 's-'+String(i)+String(j);
+                let p_c = c.split('-');
+                let square = document.getElementById(`${idx}`);
+                square.classList.add(`color${p_c[0]}`);
+            }
+        }));
+        console.log('board updated', boardArr);
     }
 }
 
@@ -209,24 +220,24 @@ function buildBoard() {
     console.log("board ready");
 }
 
-function updatePieceContainer(change, idx) {
-    let pC = document.getElementsByClassName('piece-container')[0];
-    if (!pC) {
-        let pC = document.createElement('div');
-        pC.classList.add('piece-container');
-        avtData.appendChild(pC);
-        // console.log(pC);
+function updateCardContainer(change, idx) {
+    let cardContainer = document.getElementsByClassName('card-container')[0];
+    if (!cardContainer) {
+        let cardContainer = document.createElement('div');
+        cardContainer.classList.add('card-container');
+        avtData.appendChild(cardContainer);
+        // console.log(cardContainer);
     } else {
         switch(change) {
-            case 'pieces':
-                pieces.forEach((p,i) => {
-                    let pCp = document.createElement('div');
-                    pCp.setAttribute('id',`pid-${i}`);
-                    pCp.classList.add("piece",`p-${p}`);
-                    pCp.innerHTML = `${p}`;
-                    pC.appendChild(pCp);
+            case 'cards':
+                cards.forEach((c,i) => {
+                    let card = document.createElement('div');
+                    card.setAttribute('id',`pid-${i}`);
+                    card.classList.add('card',`p-${c}`,`${cardColor()}`);
+                    card.innerHTML = `${c}`;
+                    cardContainer.appendChild(card);
                 });
-                listenPieces();
+                listenCards();
                 break;
             default:
                 break
@@ -241,30 +252,44 @@ function listenSquares() {
     });
 }
 
-function listenPieces() {
-    let pCps = document.getElementsByClassName('piece');
-    [].forEach.call(pCps, (pCp) => {
-        pCp.addEventListener('click', choosePiece); 
+function listenCards() {
+    let cards = document.getElementsByClassName('card');
+    [].forEach.call(cards, (card) => {
+        card.addEventListener('click', chooseCard); 
     });
 }
 
-function choosePiece(event) {
-    let pCps = document.getElementsByClassName('piece');
-    [].forEach.call(pCps, (pCp) => {
-        pCp.classList.remove('chosen');
+function chooseCard(event) {
+    let cards = document.getElementsByClassName('card');
+    [].forEach.call(cards, (card) => {
+        card.classList.remove('chosen');
     });
     event.target.classList.add('chosen');
-    chosenP = event.target.getAttribute('id');
+    chosenC = event.target.getAttribute('id');
 }
 
 function chooseSquare(event) {
     if (myTurn) {
-        let pieceVal = document.getElementById(chosenP).classList[1];
-        event.target.classList.add('occ', `${myNum}`, `${chosenP}`);
+        let card = document.getElementById(chosenC);
+        let cardVal = card.classList[1];
+        event.target.classList.add('occupied', `${myNum}`, `${chosenC}`);
         //make move
         let squareId = event.target.getAttribute('id');
-        console.log('dispatch move', pieceVal, squareId);
-        updateAvtData('my_turn');
-        console.log('unshow piece in piece container');
+        // console.log('dispatch move', cardVal, squareId);
+        dispatchMove(cardVal, squareId);
+        card.classList.add('nodisplay');
     }
+}
+
+function dispatchMove(card, square) {
+    let c = card.split('-')[1];
+    let s = square.split('-')[1];
+    let message = {
+        "tag": "game",
+        "sender": `${clientId}`,
+        "receiver": "game",
+        "text": "move",
+        "board": [myNum,c,s]
+    }
+    connection.send(JSON.stringify(message));
 }
