@@ -79,11 +79,16 @@ async def handleGame(data):
         cards = game.deal_3(2)
         await notify_client(cards)
     elif (data['text'] == 'move'):
+        is_bomb = False
+        if (len(data['data'])>3):
+            is_bomb = True
         data = game.process_message(data)
         await notify_public_message(data)
-        player = game.players.index(game.whos_turn)+1
-        cards = game.deal_1(player)
-        await notify_client(cards)
+        if (not is_bomb):
+            player = game.players.index(game.whos_turn)+1
+            cards = game.deal_1(player)
+            await notify_client(cards)
+        game.switch_turn()
 
 async def room(websocket, path):
     cid = createID(4)

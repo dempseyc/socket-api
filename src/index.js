@@ -88,6 +88,8 @@ let cards = [];
 let chosenC = null;
 let colors = ['color1','color2'];
 let cardColor = ()=>colors[myNum-1];
+let bombPlaced = false;
+let bombReady = false;
 
 avtData.addEventListener('click', () => {
     if (!gameOn) {
@@ -146,6 +148,13 @@ function handleGameMessages(message) {
             updateBoard();
             break;
         case 'board':
+            updateBoard(message.data);
+            updateAvtData('my_turn');
+            break;
+        case 'disable':
+            bombPlaced = false;
+            bombReady = false;
+            console.log('disabled')
             updateBoard(message.data);
             updateAvtData('my_turn');
             break;
@@ -222,6 +231,12 @@ function updateBoard(boardArr = 'blank') {
                 square.className = 'square';
             }
         }));
+        if (bombReady) {
+            autoBombExplode()
+        }
+        if (bombPlaced) {
+            bombReady = true;
+        }
     }
 }
 
@@ -289,27 +304,48 @@ function chooseCard(event) {
 
 function chooseSquare(event) {
     let square = event.target;
+    let squareId = square.getAttribute('id');
     if (myTurn) {
         let card = document.getElementsByClassName(`${chosenC}`)[0];
         let cardVal = card.classList[1].split('-')[1];
         console.log('cardval=',cardVal);
-        if (square.classList[1] !== 'occupied' || cardVal === '2' ) {
-            let squareId = square.getAttribute('id');
+        if (square.classList[1] !== 'occupied' && cardVal === '3') {
             sendMove(cardVal, squareId);
-            // remove card from hand
+            card.parentNode.removeChild(card);
+            bombPlaced = true;
+        }
+        else if ((square.classList[1] !== 'occupied' && cardVal === '1') || cardVal === '2' ) {
+            sendMove(cardVal, squareId);
             card.parentNode.removeChild(card);
         }
     }
 }
 
+function autoBombExplode() {
+    sendMove();
+}
+
 function sendMove(cardVal, square) {
-    let s = square.split('-')[1];
-    let m = {
-        "tag": "game",
-        "sender": `${clientId}`,
-        "receiver": "game",
-        "text": "move",
-        "data": [myNum,cardVal,s]
+    let m = {}
+    if (!bombReady) {
+        let s = square.split('-')[1];
+        m = {
+            "tag": "game",
+            "sender": `${clientId}`,
+            "receiver": "game",
+            "text": "move",
+            "data": [myNum,cardVal,s]
+        }
+    } else {
+        m = {
+            "tag": "game",
+            "sender": `${clientId}`,
+            "receiver": "game",
+            "text": "move",
+            "data": [myNum,'','','bomb']
+        }
+        bombPlaced = false;
+        bombReady = false;
     }
     connection.send(JSON.stringify(m));
 }

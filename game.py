@@ -11,6 +11,7 @@ class Game(object):
         self.decks = [self.deck1,self.deck2]
         self.phase = 'init'
         self.bombs_on_board = []
+        self.bomb_disabled = False
 
     def reset(self):
         self.quit_game()
@@ -31,12 +32,13 @@ class Game(object):
     def deal_1(self,player):
         message = self.create_message('game', 'game', self.players[player-1], 'cards', self.decks[player-1][:1:])
         del self.decks[player-1][:1:]
-        self.switch_turn()
         return message;
 
-    def return_cards(self,player,cards):
+    def return_cards(self,cards):
         for c in cards:
-            self.decks[player-1].append(c)
+            owner = int(c.split('-')[0])
+            val = c.split('-')[1]
+            self.decks[owner-1].append(val)
 
     def add_player(self,player):
         if (not self.game_on):
@@ -47,35 +49,92 @@ class Game(object):
         else:
             return self.reply_to_bad_joiner(player)
 
-    def process_message(self,message):
-        if (message['sender'] == self.whos_turn):
-            return self.apply_move(message)
-            # print('pm')
-
     def create_message(self, tag, sender, receiver, text, data=None):
         message = {'tag': tag, 'sender': sender, 'receiver': receiver, 'text': text, 'data': data}
         return message;
 
-    def apply_move(self, message):
+    def process_message(self, message):
+        print(message)
+
         player = message['data'][0]
         card_val = message['data'][1]
         square = message['data'][2]
+        self.bomb_disabled = False
 
-        if card_val == 2:
+        if len(message['data']) > 3:
+            tha_bomb = message['data'][3]
+            tha_bomb = self.bombs_on_board[0]
+            cards_to_return = self.explode_bomb(player,tha_bomb)
+            print(cards_to_return, "return")
+            # put a 1 card in place of bomb
+            card_val = 1
+            square = [tha_bomb[0],tha_bomb[1]]
+            # delete a 1 card from deck
+
+        elif card_val == str(2):
             existing_card = self.board[int(square[0])][int(square[1])]
-            if existing_card:
-                self.return_cards(player,[card_val])
-        elif card_val == 3:
+            if (existing_card != '0'):
+                print('existing',existing_card)
+                owner = existing_card.split('-')[0]
+                val = existing_card.split('-')[1]
+                if (val == str(3)):
+                    self.bomb_disabled = self.disable_bomb(owner)
+                self.return_cards([existing_card])
+
+        elif card_val == str(3):
             self.load_bomb(square[0],square[1],player)
         self.board[int(square[0])][int(square[1])] = str(player)+'-'+str(card_val)
-        return self.create_message('game','game','game','board',self.strip_private_info(self.board))
+        text = 'board'
+        if (self.bomb_disabled):
+            text = 'disable'
+        return self.create_message('game','game','game',text,self.strip_private_info(self.board))
 
     def strip_private_info(self,board_data):
         public_board = [[s[0] for s in row] for row in board_data]
         return public_board;
 
-    def load_bomb(self,cy,cx,player):
-        self.bombs_on_board.append([cy,cx,player])
+    def load_bomb(self,cy,cx,player_num):
+        self.bombs_on_board.append([cy,cx,player_num])
+        print(self.bombs_on_board, 'bombs')
+
+    def disable_bomb(self,player_num):
+        self.bombs_on_board.pop(0)
+        return True;
+
+    def explode_bomb(self,player,bomb):
+        square = [bomb[0],bomb[1]]
+        del self.bombs_on_board[0]
+        cards_returned = self.bombBoard(square)
+        for c in cards_returned:
+            owner = int(c.split('-')[0])
+            val = c.split('-')[1]
+            if val == str(3):
+                self.bomb_disabled = self.disable_bomb(owner)
+        return cards_returned;
+
+    def bombBoard(self,b):
+        cards_removed = []
+        for i,row in enumerate(self.board):
+            for j,s in enumerate(row):
+                if (self.is_adjacent([i,j],b) and self.board[i][j] != '0'):
+                    cards_removed.append(self.board[i][j])
+                    self.board[i][j] = '0'
+        return cards_removed;
+
+    def is_adjacent(self,s,b):
+        ss = [int(s[0]),int(s[1])]
+        adjacent = self.get_adjacent(b)
+        if ss in adjacent:
+            return True;
+
+    def get_adjacent(self,square):
+        limit = len(self.board)
+        x = int(square[0])
+        y = int(square[1])
+        h = [x+1,x,x-1]
+        v = [y+1,y,y-1]
+        adj = [[a,b] for a in h for b in v if a in range(limit) if b in range(limit) if [a,b] != [x,y]]
+        return adj;
 
     def switch_turn(self):
         if (self.whos_turn == self.players[0]):
