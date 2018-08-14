@@ -57,9 +57,15 @@ function updateMessagesList(message) {
 }
 
 function updateClientList(message) {
-let new_list = message.list.map((clientHandle) => `<li>${clientHandle}</li>`).join('');
+    console.log(message);
+    let new_list = message.list.map((clientHandle) => `<li>${clientHandle}</li>`).join('');
     room_list.innerHTML = new_list;
+    if (message.players.length > 0) {
+        message.text = 'late join';
+        handleGameMessages(message);
+    }
 }
+
 
 function sendPubMessage (event) {
     event.preventDefault();
@@ -140,6 +146,19 @@ function handleGameMessages(message) {
                 connection.send(JSON.stringify(m));
             }
             break;
+        case 'late join':
+            playerList = message.players;
+            if (playerList.length === 2) {
+                console.log('plist2');
+                updateAvtData('reject',playerList[0],1);
+                updateOppData('reject',playerList[1],2);
+                gameOn = true;
+            }
+            if (playerList.length === 1) {
+                console.log('plist1');
+                updateOppData('join',playerList[0],1);
+            }
+            break;
         case 'try later.':
             updateAvtData('reject',playerList[0],1);
             updateOppData('reject',playerList[1],2);
@@ -162,6 +181,9 @@ function handleGameMessages(message) {
             cards = message.data;
             updateAvtData('cards');
             break;
+        case 'win':
+            message.text = message.data
+            updateMessagesList(message);
         case 'reset':
             updateBoard();
             updateAvtData('reset');
@@ -184,7 +206,7 @@ function updateAvtData(uType,player,playerNum) {
             avtData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
             break;
         case 'reset':
-            avtData.innerHTML = `<span>waiting for opponent...</span>`;
+            avtData.innerHTML = `<span>click to play</span>`;
             break;
         case 'cards':
             updateCardContainer('cards');
@@ -208,7 +230,7 @@ function updateOppData(uType,player,playerNum) {
             oppData.innerHTML = `<span>${player} as Player${playerNum}</span>`;
             break;
         case 'reset':
-            oppData.innerHTML = `<span>click to play</span>`;
+            oppData.innerHTML = `<span>waiting for opponent...</span>`;
             break;
         default:
             console.log('unknown');

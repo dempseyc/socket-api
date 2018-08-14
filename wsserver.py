@@ -24,7 +24,7 @@ def createID(n):
 
 def clients_event():
     c_list = list(clients)
-    return json.dumps({'tag': 'clients', 'count': len(clients), 'list': c_list })
+    return json.dumps({'tag': 'clients', 'count': len(clients), 'list': c_list, 'players': game.players })
 
 def message_event(data = {'tag': 'hello', 'sender': 'server', 'text': 'hello!'}):
     return json.dumps(data)
@@ -88,7 +88,15 @@ async def handleGame(data):
             player = game.players.index(game.whos_turn)+1
             cards = game.deal_1(player)
             await notify_client(cards)
-        game.switch_turn()
+        win_state = game.check_win_state()
+        if (win_state[0]):
+            print('win')
+            data = game.create_win_message(win_state[1])
+            await notify_public_message(data)
+            data = game.reset()
+            await notify_public_message(data)
+        else:
+            game.switch_turn()
 
 async def room(websocket, path):
     cid = createID(4)

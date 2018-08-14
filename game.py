@@ -12,6 +12,15 @@ class Game(object):
         self.phase = 'init'
         self.bombs_on_board = []
         self.bomb_disabled = False
+        self.win_states = self.make_win_states()
+        self.winner = [False,'0']
+        # self.starter_board =
+        # [["2", "0", "1", "0", "1"],
+        # ["0", "0", "0", "0", "0"],
+        # ["1", "0", "1", "0", "2"],
+        # ["0", "0", "0", "0", "0"],
+        # ["2", "0", "2", "0", "1"]]
+        # player 2s turn
 
     def reset(self):
         self.quit_game()
@@ -157,6 +166,43 @@ class Game(object):
         message = self.create_message('direct', 'game', player, 'try later.')
         return message;
 
+    def make_win_states(self):
+        hs = [[str(x)+str(y) for y in range(5)] for x in range(5)]
+        vs = [[str(x)+str(y) for x in range(5)] for y in range(5)]
+        diag1 = [str(x)*2 for x in range(5)]
+        diag2 = ['40','31','22','13','04']
+        combos = hs+vs+[diag1]+[diag2]
+        return combos;
 
-
+    # wrote this with no bugs on first try, wow!
+    def check_board_for_combo(self,combo):
+        coos = [[int(s[0]),int(s[1])] for s in combo]
+        board_vals = [ self.board[coo[0]][coo[1] ] for coo in coos]
+        result = True
+        player = '0'
+        prev = board_vals[-1][0]
+        for i,val in enumerate(board_vals):
+            if (val[0] == prev and val[0] != '0'):
+                prev = board_vals[i][0]
+                player = val[0]
+                continue;
+            else:
+                result = False
+        return [result, player]
         
+
+    def check_win_state(self):
+        win = [False,'0']
+        if ( len(self.bombs_on_board) < 1 ):
+            for win_combo in self.win_states:
+                win = self.check_board_for_combo(win_combo)
+                if(win[0]):
+                    return win;
+                else:
+                    continue;
+        return win;
+
+    def create_win_message(self,player):
+        winner = self.players[int(player)-1]
+        data = f'{winner} wins!!'
+        return self.create_message('game','game','game','win',data)
